@@ -94,8 +94,8 @@ def create_scatterplot_assignments(data, centroids, iter, purity, cluster_sizes)
     #plot.set_xlim(0, 110)
     #= Add the two current centroids, including labels
     sns.scatterplot(
-        [centroids.iloc[0+(iter*2),2], centroids.iloc[1+(iter*2),2]],
-        [centroids.iloc[0+(iter*2),3], centroids.iloc[1+(iter*2),3]],
+        x = [centroids.iloc[0+(iter*2),2], centroids.iloc[1+(iter*2),2]],
+        y = [centroids.iloc[0+(iter*2),3], centroids.iloc[1+(iter*2),3]],
         marker="x", color="darkred", s=70, linewidth=2)
     plt.text(
         centroids.iloc[0+(iter*2),2]+1, 
