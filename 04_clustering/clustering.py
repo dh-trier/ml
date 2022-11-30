@@ -49,10 +49,6 @@ def load_data():
     bikedata.set_index("label+type", inplace=True)
     #print(bikedata)
     #= Perform the normalization (maximum value => 1)
-    #= (If we don't do this, results will be worse.)
-    #= (What is the best performance you obtain with and without
-    #= this step when running multiple test runs?)
-    #= (What other normalization strategies might be useful?)
     bikedata["gears"] = round(bikedata["gears"] / max(bikedata["gears"]) *100, 0)
     bikedata["price"] = round(bikedata["price"] / max(bikedata["price"]) *100, 0)
     bikeids = list(bikedata.index)
@@ -66,9 +62,8 @@ def load_data():
 def create_dtm(textfolder):
     """
     From the corpus of plain text files, create a document-term matrix. 
-    Uses sklearns Count Vectorizer. 
-    Normalization applied is zscores. 
-    Returns: sparse matrix. 
+    Uses sklearns Count Vectorizer. Normalization applied is zscores. 
+    Returns: sparse matrix as dataframe.  
     """
     print("\nNow creating DTM.")
     #== Create list of files
@@ -84,9 +79,9 @@ def create_dtm(textfolder):
         lowercase=True,
         analyzer="word",
         token_pattern=r"(?u)\b\w\w\w+\b", # at least 3 letters!
-        min_df=0.3,             # relatively widespread words
-        max_df=0.7,             # but not too widespread
-        max_features=1000,       # quite a small size for illustration
+        min_df=0.4,             # df = document frequency
+        max_df=0.6,             
+        max_features=10,       # number of words
         )
     #== Apply the vectorizer
     dtm = vectorizer.fit_transform(textfiles)
@@ -162,7 +157,7 @@ def apply_kmeans(dtm, ids, n_clusters):
     kmeans_model.fit_predict(dtm)
 
     #== Inspect the labels and cluster assignments
-    print(kmeans_model.labels_) # Cluster labels
+    #print(kmeans_model.labels_) # Cluster labels
     #print(len(kmeans_model.cluster_centers_)) # number of clusters
     assignments = dict(zip(ids, kmeans_model.labels_))
     #print(assignments)
@@ -183,8 +178,8 @@ def evaluate_clustering(model, ids):
     print("\nSome evaluation metrics")
     authors = [id.split("_")[1] for id in ids]
     #print(authors)
-    mappings = {"city" : 0, "trekking" : 1} # Mappings for bikedata
-    #mappings = {"Ward" : 0, "Wells" : 1, "Nesbit" : 2, "Trollope" : 3, "Broughton" : 4} # Mappings for text data
+    #mappings = {"city" : 0, "trekking" : 1} # Mappings for bikedata
+    mappings = {"Ward" : 0, "Wells" : 1, "Nesbit" : 2, "Trollope" : 3, "Broughton" : 4} # Mappings for text data
     labels_true = np.asarray([mappings[a] for a in authors])
     #print(labels_true)
     labels_pred = model.labels_
@@ -205,16 +200,16 @@ def evaluate_clustering(model, ids):
 
 def main(): 
     #= One option is to use the bikedata again (toy dataset)
-    bikedata, bikeids = load_data()
+    #bikedata, bikeids = load_data()
     #= Alternatively we can use a small real-world textual dataset
-    #textdata, textids = create_dtm(textfolder)
+    textdata, textids = create_dtm(textfolder)
     #= Set number of clusters for the tests
     n_clusters = 5
     #= Apply and evaluate kMeans
-    kmeans_model, ids = apply_kmeans(bikedata, bikeids, n_clusters)
+    kmeans_model, ids = apply_kmeans(textdata, textids, n_clusters)
     evaluate_clustering(kmeans_model, ids)
     #= Alternatively, apply and evaluate BIRCH
-    birch_model, ids = apply_birch(bikedata, bikeids, n_clusters)
+    birch_model, ids = apply_birch(textdata, textids, n_clusters)
     evaluate_clustering(birch_model, ids)
 
 
