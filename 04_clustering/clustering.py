@@ -75,13 +75,13 @@ def create_dtm(textfolder):
     #== Define the vectorizer
     vectorizer = cv(
         input="filename",
-        strip_accents="unicode",
-        lowercase=True,
-        analyzer="word",
-        token_pattern=r"(?u)\b\w\w\w+\b", # at least 3 letters!
-        min_df=0.4,             # df = document frequency
-        max_df=0.6,             
-        max_features=10,       # number of words
+        #strip_accents="unicode",
+        #lowercase=True,
+        #analyzer="word",
+        #token_pattern=r"(?u)\b\w+\b", # at least 2 letters!
+        #min_df=0.4,             # df = document frequency
+        #max_df=0.6,             
+        #max_features=1000,       # number of words
         )
     #== Apply the vectorizer
     dtm = vectorizer.fit_transform(textfiles)
@@ -90,20 +90,36 @@ def create_dtm(textfolder):
     #print("size of vocabulary", len(vectorizer.get_feature_names_out()))
     #print(vectorizer.vocabulary_)
     #== Transform to a pandas dataframe with meaningful labels
-    dtm_df = pd.DataFrame(
+    dtm = pd.DataFrame(
         data = dtm.toarray(), 
         columns = vectorizer.get_feature_names_out(),
         index = textids)
-    #print(dtm_df.head())
-    #print(dtm_df.shape)
+    print("vectorized", dtm.head())
+    print(dtm.shape)
+    #= Perform the basic relative frequency transformation
+    counts = np.sum(dtm, axis=1)
+    #print(counts)
+    dtm = dtm.divide(counts, axis=0)
+    #print("relative", dtm.head())
+    #= Select the words by highest overall (relative) frequency
+    dtm = dtm.T
+    dtm["totalfreqs"] = np.sum(dtm, axis=1)
+    dtm.sort_values(by="totalfreqs", ascending=False, inplace=True)
+    print("\ntotalfreqs\n", dtm.iloc[-5:,-5:])
+    dtm = dtm[0:10]
+    dtm = dtm.drop("totalfreqs", axis=1)
+    dtm = dtm.T
+    print("\nMFW\n", dtm.head())
+    print(dtm.shape)
     #= Perform a normalization on the frequency data (here: z-scores)
-    means = np.mean(dtm_df, axis=0) # means for each word across texts
-    stdevs = np.std(dtm_df, axis=0) # standard deviation for each word across texts
-    dtm_df = (dtm_df - means) / stdevs # = zscores (mean = 0, stdev = 1, per words)
-    print(dtm_df.head())
+    means = np.mean(dtm, axis=0) # means for each word across texts
+    stdevs = np.std(dtm, axis=0) # standard deviation for each word across texts
+    dtm = (dtm - means) / stdevs # = zscores (mean = 0, stdev = 1, per words)
+    print("\nz-scores\n", dtm.head())
+    print(dtm.shape)
     #print(textids)
     #== Return results
-    return dtm_df, textids
+    return dtm, textids
 
 
 def apply_birch(dtm, ids, n_clusters): 
@@ -187,13 +203,13 @@ def evaluate_clustering(model, ids):
     ## For purity, compute contingency matrix
     contingency_matrix = metrics.cluster.contingency_matrix(labels_true, labels_pred)
     purity = np.sum(np.amax(contingency_matrix, axis=0)) / np.sum(contingency_matrix) 
-    print("Purity", purity)
+    print("Purity", round(purity,3))
     rs = metrics.rand_score(labels_true, labels_pred)
-    print("Rand score", rs)
+    print("Rand score", round(rs,3))
     ars = metrics.adjusted_rand_score(labels_true, labels_pred)
-    print("Adjusted Rand score", ars)
+    print("Adjusted Rand score", round(ars,3))
     amis = metrics.adjusted_mutual_info_score(labels_true, labels_pred)
-    print("Adjusted mutual information score", amis)
+    print("Adjusted mutual information score", round(amis,3))
 
 
 # === Main === 
@@ -209,8 +225,8 @@ def main():
     kmeans_model, ids = apply_kmeans(textdata, textids, n_clusters)
     evaluate_clustering(kmeans_model, ids)
     #= Alternatively, apply and evaluate BIRCH
-    birch_model, ids = apply_birch(textdata, textids, n_clusters)
-    evaluate_clustering(birch_model, ids)
+    #birch_model, ids = apply_birch(textdata, textids, n_clusters)
+    #evaluate_clustering(birch_model, ids)
 
 
 main()
