@@ -1,0 +1,4 @@
+The following wikidata query gives us the GDP per country. 
+Then, just save the table and use it for lookup. 
+
+https://query.wikidata.org/#SELECT%20DISTINCT%20%3Fstate%20%3FstateLabel%20%3Fpopulation%20%3Fgdp%20%28year%28%3Fdate%29%20as%20%3Fyear%29%0A%7B%0A%20%20%3Fstate%20wdt%3AP31%20wd%3AQ6256%20%3B%0A%20%20%20%20%20%20%20%20%20wdt%3AP1082%20%3Fpopulation%20%3B%0A%20%20%20%20%20%20%20%20%20wdt%3AP8744%2Fwdt%3AP2131%20%3Fgdp%20.%0A%20%20%3FgdpStmt%20ps%3AP2131%20%3Fgdp%20%3B%0A%20%20%20%20%20%20%20%20%20%20%20pq%3AP585%20%3Fdate%20.%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22%20%7D%0A%7D%0AGROUP%20BY%20%3Fstate%20%3Fpopulation%20%3FstateLabel%20%3Fgdp%20%3Fdate%0AORDER%20BY%20DESC%28%3Fyear%29%20DESC%28%3Fpopulation%29%0A
