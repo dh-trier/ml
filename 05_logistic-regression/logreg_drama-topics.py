@@ -107,13 +107,23 @@ def perform_logreg(data):
     print("coefficients", reg.coef_)
     print("intercept", reg.intercept_)
     
-    # Make results more readable
+    
+    # Make results more readable (DataFrame)
     coeffs = np.round(reg.coef_[0], 3)
     results = dict(zip(featurelabels, coeffs))
     results = pd.DataFrame.from_dict(results, orient="index", columns=["coeff"])
-    results = results.sort_values(by="coeff", ascending=False)
-    print("\npositive (tragedy):\n", results.head(3), "\n\nnegative (comedy):\n", results.tail(3))
     
+    # Get topic with highest and lowest value
+    print("\nmost positive topic (tragedy):", results["coeff"].idxmax())
+    print("most negative topic (comedy):", results["coeff"].idxmin())
+    
+    # Alternatively, sort Dataframe and use .head(n) / .tail(m)
+    results = results.sort_values(by="coeff", ascending=False)
+    print(
+        "\npositive (tragedy):\n", results.head(3), 
+        "\n\nnegative (comedy):\n", results.tail(3)
+        )
+        
     # Save coefficients to disk
     with open(join(wd, "Topics-and-subgenre_coefficients.csv"), "w", encoding="utf8") as outfile: 
         results.to_csv(outfile, sep=";")
@@ -128,7 +138,7 @@ def visualize_coeffs(results):
 
     # Select the most relevant topics (extreme scores)
     top = results.iloc[:10]
-    bottom = results.iloc[-10:]
+    bottom = results.iloc(10)
     selection = pd.concat([top, bottom])
 
     # Define barplot
